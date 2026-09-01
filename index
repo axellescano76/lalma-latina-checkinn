@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+Lalma Latina Check-in
+</title>
+
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+
+<style>
+
+body {
+
+font-family: Arial, sans-serif;
+text-align:center;
+background:#f5f5f5;
+padding:20px;
+
+}
+
+
+h1 {
+
+font-size:28px;
+
+}
+
+
+button {
+
+background:#111;
+color:white;
+padding:15px 30px;
+border:none;
+border-radius:10px;
+font-size:18px;
+
+}
+
+
+#reader {
+
+width:100%;
+max-width:400px;
+margin:20px auto;
+
+}
+
+
+#result {
+
+background:white;
+padding:20px;
+border-radius:10px;
+font-size:20px;
+margin-top:20px;
+
+}
+
+
+.success {
+
+color:green;
+
+}
+
+
+.error {
+
+color:red;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>
+LALMA LATINA
+</h1>
+
+
+<h2>
+CHECK-IN
+</h2>
+
+
+<button onclick="startScanner()">
+📷 SCAN QR
+</button>
+
+
+<div id="reader"></div>
+
+
+<div id="result">
+Waiting...
+</div>
+
+
+
+<script>
+
+
+const API_URL = 
+"https://script.google.com/macros/s/AKfycbxMe9-m_EFsfz-ANUckc1vTHjo91OfiNrjowdxoNH9eXoBkl_XLZTHakfUIvmU81rZk/exec";
+
+
+
+let scanner;
+
+
+
+function startScanner(){
+
+
+scanner = new Html5Qrcode("reader");
+
+
+
+scanner.start(
+
+{
+facingMode:"environment"
+},
+
+
+{
+fps:10,
+qrbox:250
+},
+
+
+function(decodedText){
+
+
+scanner.stop();
+
+
+
+sendCheckIn(decodedText);
+
+
+
+},
+
+
+function(error){
+
+}
+
+
+
+)
+
+
+.catch(function(err){
+
+document.getElementById("result").innerHTML =
+"Camera error: " + err;
+
+});
+
+
+}
+
+
+
+
+function sendCheckIn(studentID){
+
+
+
+document.getElementById("result").innerHTML =
+"Checking student...";
+
+
+
+fetch(API_URL, {
+
+
+method:"POST",
+
+
+body:JSON.stringify({
+
+studentID:studentID
+
+}),
+
+
+headers:{
+
+"Content-Type":"application/json"
+
+}
+
+
+})
+
+
+.then(response=>response.json())
+
+
+.then(data=>{
+
+
+showResult(data);
+
+
+})
+
+
+.catch(error=>{
+
+
+document.getElementById("result").innerHTML =
+"Connection error";
+
+
+});
+
+
+}
+
+
+
+
+function showResult(data){
+
+
+
+const box =
+document.getElementById("result");
+
+
+
+if(data.success){
+
+
+box.className="success";
+
+
+box.innerHTML = `
+
+
+<h2>
+✅ CHECK-IN SUCCESSFUL
+</h2>
+
+
+<p>
+${data.name}
+</p>
+
+
+<p>
+Classes Remaining:
+</p>
+
+
+<h1>
+${data.remaining}
+</h1>
+
+
+`;
+
+
+}
+
+else{
+
+
+box.className="error";
+
+
+box.innerHTML = `
+
+
+<h2>
+❌ ${data.message}
+</h2>
+
+
+`;
+
+
+
+}
+
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
